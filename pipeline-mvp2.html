@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pulse MVP – Pipeline Shortlist (Single Screen)</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#e2e8f0;
+      --panel:#f8fafc;
+      --accent:#0ea5a4; /* neutral teal */
+      --chip:#e6fffb;
+      --warn:#fff7ed;
+      --good:#f0fdf4;
+      --bad:#fef2f2;
+      --shadow: 0 10px 30px rgba(2,6,23,.08);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+      color:var(--text);
+    }
+
+    /* ====== tighter spacing overall ====== */
+    .wrap{
+      max-width:1100px;
+      margin:18px auto;
+      padding:0 14px 28px;
+    }
+    header{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom:10px;
+    }
+
+    /* ====== chips: compact + scrollable on mobile ====== */
+    .kicker{
+      display:flex;
+      gap:6px;
+      flex-wrap:nowrap;
+      align-items:center;
+      overflow:auto;
+      padding-bottom:2px;
+      -webkit-overflow-scrolling:touch;
+    }
+    .kicker::-webkit-scrollbar{ height:0; }
+    .chip{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      background:var(--chip);
+      border:1px solid rgba(14,165,164,.22);
+      color:#0f766e;
+      border-radius:999px;
+      font-size:11.5px;
+      font-weight:700;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+
+    h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:-.3px;
+      line-height:1.15;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+      max-width:85ch;
+    }
+
+    .panel{
+      background:var(--bg);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    /* ====== toolbar: tighter ====== */
+    .toolbar{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:space-between;
+      align-items:flex-end;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+    .filters{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:flex-end;
+    }
+
+    label{
+      font-size:11.5px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    select, input[type="search"]{
+      appearance:none;
+      padding:8px 9px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#fff;
+      color:var(--text);
+      font-size:13px;
+      min-width:160px;
+      outline:none;
+    }
+    input[type="search"]{ min-width:220px; }
+    select:focus, input[type="search"]:focus{
+      border-color: rgba(14,165,164,.6);
+      box-shadow: 0 0 0 4px rgba(14,165,164,.12);
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    button{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:8px 9px;
+      border-radius:9px;
+      font-size:13px;
+      font-weight:800;
+      cursor:pointer;
+      color:var(--text);
+      white-space:nowrap;
+    }
+    button.primary{
+      border-color: rgba(14,165,164,.45);
+      background: rgba(14,165,164,.08);
+      color:#0f766e;
+    }
+    button:hover{ filter:brightness(.98) }
+
+    .meta{
+      padding:10px 12px;
+      background:var(--panel);
+      border-bottom:1px solid var(--border);
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 10px;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .meta strong{ color:var(--text); }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+    thead th{
+      text-align:left;
+      font-size:11.5px;
+      color:var(--muted);
+      font-weight:900;
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    tbody td{
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      font-size:13.5px;
+      vertical-align:middle;
+    }
+    tbody tr:hover{
+      background:#fcfeff;
+    }
+    .rank{
+      width:64px;
+      font-weight:900;
+    }
+    .role{
+      font-weight:800;
+      color:#0f766e;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      font-size:12px;
+      font-weight:900;
+      color:var(--text);
+      background:#fff;
+    }
+    .signal.good{ background:var(--good); border-color: rgba(34,197,94,.25); color:#166534; }
+    .signal.warn{ background:var(--warn); border-color: rgba(249,115,22,.25); color:#9a3412; }
+    .signal.bad{  background:var(--bad);  border-color: rgba(239,68,68,.25); color:#991b1b; }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+      line-height:1.35;
+    }
+    .foot{
+      padding:10px 12px 12px;
+      border-top:1px solid var(--border);
+      background:#fff;
+    }
+    .note{
+      display:grid;
+      gap:6px;
+      margin:0;
+      padding-left:18px;
+    }
+    .note li{
+      font-size:12.5px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .right{
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    /* ====== mobile: collapse filters using <details> ====== */
+    .filtersDetails{
+      width:100%;
+      margin:0;
+      padding:0;
+    }
+    .filtersDetails summary{
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+      color:var(--text);
+      padding:8px 10px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      list-style:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .filtersDetails summary::-webkit-details-marker{ display:none; }
+    .filtersDetails[open] summary{ margin-bottom:10px; }
+
+    @media (max-width: 640px){
+      /* keep header tight */
+      .wrap{ margin:14px auto; padding:0 12px 22px; }
+      h1{ font-size:19px; }
+      input[type="search"]{ min-width: 100%; }
+
+      /* Table -> cards */
+      .right{ text-align:left; }
+      thead{ display:none; }
+      table, tbody, tr, td{ display:block; width:100%; }
+      tbody tr{ padding:8px 0; }
+      tbody td{ border-bottom:none; padding:5px 12px; }
+      tbody td::before{
+        content: attr(data-label);
+        display:block;
+        font-size:11px;
+        color:var(--muted);
+        font-weight:900;
+        margin-bottom:2px;
+      }
+      .rank{ width:auto; }
+
+      /* filters on mobile: hide full filters and use details */
+      .filters{ display:none; }
+      .toolbar{ align-items:flex-start; }
+      .actions{ width:100%; }
+      button{ flex:1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker">
+        <span class="chip">Pulse MVP • Single Screen</span>
+        <span class="chip">Audience: Pipeline Committee</span>
+        <span class="chip">Goal: Shortlist fast</span>
+      </div>
+      <h1>Pipeline Shortlist — <span style="color:var(--accent)">[Tournament Name]</span></h1>
+      <p class="sub">
+        Simple, data-supported view to help selection discussions.
+        It does <strong>not</strong> replace coaches or selectors — it surfaces likely standouts and consistent performers.
+      </p>
+    </header>
+
+    <section class="panel" aria-label="Pulse MVP panel">
+      <div class="toolbar">
+
+        <!-- Mobile-friendly filter toggle (shows on mobile, hidden on desktop via media rules) -->
+        <details class="filtersDetails">
+          <summary>Filters</summary>
+          <div class="filters" style="display:flex;">
+            <div>
+              <label for="roleFilter">Role</label><br/>
+              <select id="roleFilter">
+                <option value="all">All roles</option>
+                <option value="Batsman">Batsman</option>
+                <option value="Bowler">Bowler</option>
+                <option value="All-rounder">All-rounder</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="sortBy">Sort by</label><br/>
+              <select id="sortBy">
+                <option value="pulse">Pulse Score (desc)</option>
+                <option value="consistency">Consistency (desc)</option>
+                <option value="runs">Runs (desc)</option>
+                <option value="sr">Strike Rate (desc)</option>
+                <option value="wickets">Wickets (desc)</option>
+                <option value="econ">Economy (asc)</option>
+              </select>
+            </div>
+
+            <div style="flex:1; min-width:220px;">
+              <label for="search">Search</label><br/>
+              <input id="search" type="search" placeholder="Search player name…" />
+            </div>
+          </div>
+        </details>
+
+        <!-- Desktop filters (hidden on mobile by media rule) -->
+        <div class="filters" aria-label="Filters (desktop)">
+          <div>
+            <label for="roleFilterDesktop">Role</label><br/>
+            <select id="roleFilterDesktop">
+              <option value="all">All roles</option>
+              <option value="Batsman">Batsman</option>
+              <option value="Bowler">Bowler</option>
+              <option value="All-rounder">All-rounder</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="sortByDesktop">Sort by</label><br/>
+            <select id="sortByDesktop">
+              <option value="pulse">Pulse Score (desc)</option>
+              <option value="consistency">Consistency (desc)</option>
+              <option value="runs">Runs (desc)</option>
+              <option value="sr">Strike Rate (desc)</option>
+              <option value="wickets">Wickets (desc)</option>
+              <option value="econ">Economy (asc)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="searchDesktop">Search</label><br/>
+            <input id="searchDesktop" type="search" placeholder="Search player name…" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="exportCsvBtn">Export CSV</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div>
+          Showing <strong id="count">0</strong> players • Data slice: <strong>[Single tournament / season only]</strong>
+        </div>
+        <div>
+          Last updated: <strong id="updatedAt">—</strong>
+        </div>
+      </div>
+
+      <div style="overflow:auto; max-height:520px;">
+        <table aria-label="Pipeline shortlist table">
+          <thead>
+            <tr>
+              <th class="rank">Rank</th>
+              <th>Player</th>
+              <th>Role</th>
+              <th class="right">Matches</th>
+              <th class="right">Runs</th>
+              <th class="right">Strike Rate</th>
+              <th class="right">Wickets</th>
+              <th class="right">Economy</th>
+              <th class="right">Consistency</th>
+              <th class="right">Pulse Score</th>
+              <th>Flag</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="foot">
+        <div class="small"><strong>How to use this:</strong></div>
+        <ul class="note">
+          <li>Use it to start conversations and spot outliers quickly.</li>
+          <li>If a player looks surprising, treat that as a cue to investigate — not a mistake.</li>
+          <li>Keep the MVP simple. Add extra data points only after this version is being used.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // === MVP demo data ===
+    const players = [
+      { name:"J. Smith", role:"Batsman", matches:6, runs:245, sr:142.6, wickets:0, econ:null, consistency:4.2, pulse:86, flag:"Standout" },
+      { name:"A. Daniels", role:"All-rounder", matches:6, runs:168, sr:128.9, wickets:8, econ:6.4, consistency:4.0, pulse:84, flag:"Standout" },
+      { name:"K. Jacobs", role:"Bowler", matches:6, runs:24,  sr:96.0,  wickets:11, econ:5.9, consistency:4.1, pulse:82, flag:"Standout" },
+      { name:"T. Mokoena", role:"Batsman", matches:6, runs:190, sr:118.3, wickets:0, econ:null, consistency:4.5, pulse:78, flag:"Consistent" },
+      { name:"R. Williams", role:"Bowler", matches:6, runs:12,  sr:80.0,  wickets:9,  econ:7.1, consistency:3.8, pulse:74, flag:"Consistent" },
+      { name:"S. Naidoo", role:"All-rounder", matches:5, runs:102, sr:134.0, wickets:5, econ:7.6, consistency:3.6, pulse:70, flag:"Watch" },
+      { name:"L. Petersen", role:"Batsman", matches:5, runs:156, sr:110.2, wickets:0, econ:null, consistency:3.7, pulse:69, flag:"Watch" },
+      { name:"B. Dlamini", role:"Bowler", matches:5, runs:9,   sr:60.0,  wickets:6, econ:8.2, consistency:3.2, pulse:60, flag:"Develop" }
+    ];
+
+    // Desktop controls
+    const roleFilterD = document.getElementById('roleFilterDesktop');
+    const sortByD = document.getElementById('sortByDesktop');
+    const searchD = document.getElementById('searchDesktop');
+
+    // Mobile controls (inside details)
+    const roleFilterM = document.getElementById('roleFilter');
+    const sortByM = document.getElementById('sortBy');
+    const searchM = document.getElementById('search');
+
+    const tbody = document.getElementById('tbody');
+    const count = document.getElementById('count');
+    const updatedAt = document.getElementById('updatedAt');
+
+    function formatNum(n, digits=1){
+      if(n === null || n === undefined) return "—";
+      const x = Number(n);
+      if(Number.isNaN(x)) return "—";
+      return x.toFixed(digits);
+    }
+
+    function flagClass(flag){
+      const f = (flag || "").toLowerCase();
+      if(f.includes("standout")) return "good";
+      if(f.includes("watch") || f.includes("consistent")) return "warn";
+      if(f.includes("develop")) return "bad";
+      return "";
+    }
+
+    function applySort(list, key){
+      const copy = [...list];
+      copy.sort((a,b)=>{
+        if(key === "pulse") return (b.pulse ?? -Infinity) - (a.pulse ?? -Infinity);
+        if(key === "consistency") return (b.consistency ?? -Infinity) - (a.consistency ?? -Infinity);
+        if(key === "runs") return (b.runs ?? -Infinity) - (a.runs ?? -Infinity);
+        if(key === "sr") return (b.sr ?? -Infinity) - (a.sr ?? -Infinity);
+        if(key === "wickets") return (b.wickets ?? -Infinity) - (a.wickets ?? -Infinity);
+        if(key === "econ") return (a.econ ?? Infinity) - (b.econ ?? Infinity);
+        return 0;
+      });
+      return copy;
+    }
+
+    function currentControls(){
+      // If mobile search exists and viewport is small, use mobile values; else desktop.
+      const isMobile = window.matchMedia("(max-width: 640px)").matches;
+      const role = isMobile ? roleFilterM.value : roleFilterD.value;
+      const sort = isMobile ? sortByM.value : sortByD.value;
+      const q = (isMobile ? searchM.value : searchD.value || "").trim().toLowerCase();
+      return { role, sort, q, isMobile };
+    }
+
+    function syncControls(){
+      // Keep desktop and mobile controls in sync
+      roleFilterM.value = roleFilterD.value;
+      sortByM.value = sortByD.value;
+      searchM.value = searchD.value;
+
+      roleFilterD.value = roleFilterM.value;
+      sortByD.value = sortByM.value;
+      searchD.value = searchM.value;
+    }
+
+    function render(){
+      const { role, sort, q } = currentControls();
+
+      let filtered = players.filter(p=>{
+        const roleOk = (role === "all") || (p.role === role);
+        const searchOk = !q || (p.name.toLowerCase().includes(q));
+        return roleOk && searchOk;
+      });
+
+      filtered = applySort(filtered, sort);
+
+      tbody.innerHTML = "";
+      filtered.forEach((p, i)=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="rank" data-label="Rank">#${i+1}</td>
+          <td data-label="Player"><strong>${p.name}</strong></td>
+          <td data-label="Role"><span class="role">${p.role}</span></td>
+          <td class="right" data-label="Matches">${p.matches ?? "—"}</td>
+          <td class="right" data-label="Runs">${p.runs ?? "—"}</td>
+          <td class="right" data-label="Strike Rate">${formatNum(p.sr,1)}</td>
+          <td class="right" data-label="Wickets">${p.wickets ?? "—"}</td>
+          <td class="right" data-label="Economy">${formatNum(p.econ,1)}</td>
+          <td class="right" data-label="Consistency">${formatNum(p.consistency,1)}</td>
+          <td class="right" data-label="Pulse Score"><span class="pill">${p.pulse ?? "—"}</span></td>
+          <td data-label="Flag">
+            <span class="pill signal ${flagClass(p.flag)}">${p.flag || "—"}</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      count.textContent = filtered.length.toString();
+    }
+
+    function exportCSV(){
+      const { role, sort, q } = currentControls();
+
+      let filtered = players.filter(p=>{
+        const roleOk = (role === "all") || (p.role === role);
+        const searchOk = !q || (p.name.toLowerCase().includes(q));
+        return roleOk && searchOk;
+      });
+
+      filtered = applySort(filtered, sort);
+
+      const headers = ["Rank","Player","Role","Matches","Runs","Strike Rate","Wickets","Economy","Consistency","Pulse Score","Flag"];
+      const rows = filtered.map((p, i)=>[
+        i+1,
+        p.name,
+        p.role,
+        p.matches ?? "",
+        p.runs ?? "",
+        p.sr ?? "",
+        p.wickets ?? "",
+        p.econ ?? "",
+        p.consistency ?? "",
+        p.pulse ?? "",
+        p.flag ?? ""
+      ]);
+
+      const csv = [headers, ...rows]
+        .map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pulse_mvp_pipeline_shortlist.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // Export + reset
+    document.getElementById("exportCsvBtn").addEventListener("click", exportCSV);
+    document.getElementById("resetBtn").addEventListener("click", ()=>{
+      roleFilterD.value = "all";
+      sortByD.value = "pulse";
+      searchD.value = "";
+      syncControls();
+      render();
+    });
+
+    // Desktop listeners
+    roleFilterD.addEventListener("change", ()=>{ syncControls(); render(); });
+    sortByD.addEventListener("change", ()=>{ syncControls(); render(); });
+    searchD.addEventListener("input", ()=>{ syncControls(); render(); });
+
+    // Mobile listeners
+    roleFilterM.addEventListener("change", ()=>{ syncControls(); render(); });
+    sortByM.addEventListener("change", ()=>{ syncControls(); render(); });
+    searchM.addEventListener("input", ()=>{ syncControls(); render(); });
+
+    // Stamp updated time
+    const now = new Date();
+    updatedAt.textContent = now.toLocaleString();
+
+    // Render
+    syncControls();
+    render();
+  </script>
+</body>
+</html>
